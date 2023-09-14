@@ -38,7 +38,7 @@ class YourBot(AutoShardedBot):
 def main():
 	bot = YourBot()
 	inject.inject_into_bot(bot)
-	lana.run("YOUR TOKEN HERE")
+	bot.run("YOUR TOKEN HERE")
 
 # COG CODE
 
