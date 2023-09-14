@@ -42,8 +42,8 @@ def main():
 
 # COG CODE
 
-from dis_command.ext import commands
-from dis_command.ext import cogs
+from discommand.ext import commands
+from discommand.ext import cogs
 
 
 def is_not_bot(context):
