@@ -114,7 +114,7 @@ class Command:
 
         return new_cls
 
-    async def invoke(self, bot, context): # FIXME: type check context
+    async def invoke(self, bot, context, args): # FIXME: type check context
         """Invokes the command within the given context, also supplying the command with a reference of `bot`.
 
         Args:
@@ -143,6 +143,7 @@ def hooked_wrapped_callback(command: Command, bot, context, coro: Callable) -> C
         except asyncio.CancelledError:
             return
         except Exception as exc:
+            print(exc)
             raise CommandInvokeError(exc) from exc
         return ret
 
@@ -202,7 +203,7 @@ class CommandGroup:
         group.add_command(_command)
         return _command
 
-    async def invoke(self, bot, context):
+    async def invoke(self, bot, context, args):
         """Invokes the command within the given context, also supplying the command with a reference of `bot`.
 
         Args:
