@@ -29,7 +29,7 @@ class Context(Messageable):
             *,
             message: Message,
             bot: Client | AutoShardedClient,
-            args: list[Any],
+            args: list[Any] | str,
             kwargs: dict[str, Any],
             prefix: str | Callable | Coroutine,
             command: Command | CommandGroup,
@@ -39,8 +39,7 @@ class Context(Messageable):
         ) -> None:
         self._message = message
         self.bot = bot
-        self.args =  args
-        self.kwargs = kwargs
+        self.args =  args if args else {}
         self.prefix = prefix
         self.command = command
         self.invoked_with = invoked_with
@@ -48,8 +47,8 @@ class Context(Messageable):
         self.invoked_subcommand = invoked_subcommand
 
 
-    async def invoke(self, command: Command | CommandGroup, *args, **kwargs):
-        return await command.invoke(self, *args, **kwargs)
+    async def invoke(self, command: Command | CommandGroup):
+        return await command.invoke(self.bot, self)
 
     @property
     def message(self):

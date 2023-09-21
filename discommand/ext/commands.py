@@ -114,7 +114,7 @@ class Command:
 
         return new_cls
 
-    async def invoke(self, bot, context, args): # FIXME: type check context
+    async def invoke(self, bot, context): # FIXME: type check context
         """Invokes the command within the given context, also supplying the command with a reference of `bot`.
 
         Args:
@@ -125,7 +125,7 @@ class Command:
             raise CommandCheckError("One of the commands checks failed.")
 
         injected = hooked_wrapped_callback(self, bot, context, self.callback)
-        await injected(*context.args, **context.kwargs)
+        await injected(**context.args)
 
     def add_check(self, check: Callable) -> None:
         """Adds a check to the checks list.
@@ -137,9 +137,9 @@ class Command:
         
 def hooked_wrapped_callback(command: Command, bot, context, coro: Callable) -> Callable:
     @wraps(coro)
-    async def wrapped(*args, **kwargs):
+    async def wrapped(**args):
         try:
-            ret = await coro(command, bot, context, *args, **kwargs)
+            ret = await coro(command, bot, context, **args)
         except asyncio.CancelledError:
             return
         except Exception as exc:
@@ -203,7 +203,7 @@ class CommandGroup:
         group.add_command(_command)
         return _command
 
-    async def invoke(self, bot, context, args):
+    async def invoke(self, bot, context):
         """Invokes the command within the given context, also supplying the command with a reference of `bot`.
 
         Args:
@@ -213,7 +213,7 @@ class CommandGroup:
         if _do_checks(self.checks, context) != True:
             raise CommandCheckError("One of the commands checks failed.")
         injected = hooked_wrapped_callback(self, bot, context, self.callback)
-        await injected(*context.args, **context.kwargs)
+        await injected(**context.args)
         
 
     def add_command(self, command: Command) -> None:

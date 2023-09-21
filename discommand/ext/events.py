@@ -50,16 +50,37 @@ def _has_prefix(prefixes: list, message: Message) -> str:
 def _find_command(bot: Client | AutoShardedClient, prefix: str, content: str) -> Command | None: 
     name = content.split(prefix, 1)[1].split(" ")
     if len(name)>=2:
-        if name[1] in bot.sub_commands:
+        if bot.all_commands[name[0]] == bot.sub_commands[name[1]].parent:
             return bot.sub_commands[name[1]]
-    return bot.all_commands[name[0]] if name[0] in bot.all_commands else None
+        elif name[0] in bot.all_commands:
+            return bot.all_commands[name[0]]
+    else:
+        return bot.all_commands[name[0]] if name[0] in bot.all_commands else None
     
 def _process_arguments(content: str):
     pass
     
 def _find_args(command: Command, message: Message) -> dict[str, str]:
-    #args = inspect.getargspec(command.callback)[0]
-    return message.content.split(command.name, 1)[1].strip().split(" ")
+    try:
+        args = inspect.getfullargspec(command.callback)[0]
+    except ValueError:
+        args = inspect.signature(command.callback)
+    
+    given_args = {}
+    if not len(args)>3:
+        return None
+    del args[:3]
+    iteration = 0
+    _temp = " "
+    for arg in message.content.split(command.name, 1)[1].strip().split(" "):
+        if iteration>=len(args):
+            _temp += arg
+        else: 
+            given_args[args[iteration]] = arg
+            iteration += 1
+    given_args[args[-1]] += _temp
+
+    return given_args
     
 def process_message(bot: Client | AutoShardedClient, prefixes: str | list, message: Message, context = None) -> Command:
     """Processes a message, for retrieving a command if the message contains the prefix+command combination.
@@ -74,14 +95,7 @@ def process_message(bot: Client | AutoShardedClient, prefixes: str | list, messa
         Args (dict): All found args
     """
     if (prefix := _has_prefix(prefixes, message)):
-        print(f"prefix found: {prefix}")
         if (command := _find_command(bot, prefix, message.content)):
-            if type(command) == CommandGroup:
-                print("Found Command Group")
             args = _find_args(command, message)
-            print(command.name)
-            print(args)
-
             context = _create_context(message, bot, args=args, kwargs={}, prefix=prefixes, command=command, invoked_with=command, cls=context)
-            print(context)
-            return command, args, context
+            return command, context
