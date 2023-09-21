@@ -38,8 +38,8 @@ def _create_context(
         prefix=prefix,
         command=command,
         invoked_with=invoked_with,
-        invoked_parent=invoked_parent,
-        invoked_subcommand=invoked_subcommand
+        invoked_subcommand=invoked_subcommand,
+        view=None
     )
 
 def _has_prefix(prefixes: list, message: Message) -> str:
@@ -50,10 +50,13 @@ def _has_prefix(prefixes: list, message: Message) -> str:
 def _find_command(bot: Client | AutoShardedClient, prefix: str, content: str) -> Command | None: 
     name = content.split(prefix, 1)[1].split(" ")
     if len(name)>=2:
-        if bot.all_commands[name[0]] == bot.sub_commands[name[1]].parent:
-            return bot.sub_commands[name[1]]
-        elif name[0] in bot.all_commands:
-            return bot.all_commands[name[0]]
+        try:
+            if bot.all_commands[name[0]] == bot.sub_commands[name[1]].parent:
+                return bot.sub_commands[name[1]]
+            elif name[0] in bot.all_commands:
+                return bot.all_commands[name[0]]
+        except KeyError:
+            return None # FIXME: implment commandnotfound
     else:
         return bot.all_commands[name[0]] if name[0] in bot.all_commands else None
     
@@ -94,8 +97,10 @@ def process_message(bot: Client | AutoShardedClient, prefixes: str | list, messa
         Command: The command found
         Args (dict): All found args
     """
-    if (prefix := _has_prefix(prefixes, message)):
-        if (command := _find_command(bot, prefix, message.content)):
-            args = _find_args(command, message)
-            context = _create_context(message, bot, args=args, kwargs={}, prefix=prefixes, command=command, invoked_with=command, cls=context)
-            return command, context
+    print(prefixes)
+    if (prefix := _has_prefix(prefixes, message)) and (command := _find_command(bot, prefix, message.content)):
+        args = _find_args(command, message)
+        context = _create_context(message, bot, args=args, kwargs={}, prefix=prefixes, command=command, invoked_with=command, cls=context)
+        return command, context
+    else:
+        return None, message.channel

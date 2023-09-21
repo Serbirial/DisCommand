@@ -30,11 +30,9 @@ class Context(Messageable):
             message: Message,
             bot: Client | AutoShardedClient,
             args: list[Any] | str,
-            kwargs: dict[str, Any],
             prefix: str | Callable | Coroutine,
             command: Command | CommandGroup,
             invoked_with: Command | CommandGroup,
-            invoked_parent: CommandGroup,
             invoked_subcommand: Command
         ) -> None:
         self._message = message
@@ -43,7 +41,6 @@ class Context(Messageable):
         self.prefix = prefix
         self.command = command
         self.invoked_with = invoked_with
-        self.invoked_parent = invoked_parent
         self.invoked_subcommand = invoked_subcommand
 
 
@@ -89,7 +86,7 @@ class Context(Messageable):
     
 
 
-    async def send(self, content: str, tts: bool = False, embed: Embed = None, mention_author: bool = False, delete_after: int = None):
+    async def send(self, content: str, view = None, tts: bool = False, embed: Embed = None, mention_author: bool = False, delete_after: int = None):
         return await self.channel.send(
             content=content,
             tts=tts,
@@ -103,7 +100,7 @@ class Context(Messageable):
             allowed_mentions=None,
             reference=None,
             mention_author=mention_author,
-            view=None, # FIXME: support view, embed supression, and silent flag
+            view=view, # FIXME: support embed supression, and silent flag
             suppress_embeds=None,
             silent=False,
         ) 

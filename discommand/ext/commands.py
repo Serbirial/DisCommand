@@ -125,7 +125,10 @@ class Command:
             raise CommandCheckError("One of the commands checks failed.")
 
         injected = hooked_wrapped_callback(self, bot, context, self.callback)
-        await injected(**context.args)
+        try:
+            await injected(**context.args)
+        except TypeError:
+            await injected()
 
     def add_check(self, check: Callable) -> None:
         """Adds a check to the checks list.
@@ -143,8 +146,9 @@ def hooked_wrapped_callback(command: Command, bot, context, coro: Callable) -> C
         except asyncio.CancelledError:
             return
         except Exception as exc:
-            print(exc)
-            raise CommandInvokeError(exc) from exc
+            if hasattr(bot, "error_handler"):
+                return await bot.error_handler(context, exc)
+            raise exc
         return ret
 
     return wrapped
@@ -213,8 +217,10 @@ class CommandGroup:
         if _do_checks(self.checks, context) != True:
             raise CommandCheckError("One of the commands checks failed.")
         injected = hooked_wrapped_callback(self, bot, context, self.callback)
-        await injected(**context.args)
-        
+        try:
+            await injected(**context.args)
+        except TypeError:
+            await injected()
 
     def add_command(self, command: Command) -> None:
         """Adds a command to the list of sub-commands, this should not be invoked manually unless you know what you are doing.
@@ -230,6 +236,14 @@ class CommandGroup:
         
         command.parent = self
         self.commands[command.name] = command
+
+    def add_check(self, check: Callable) -> None:
+        """Adds a check to the checks list.
+
+        Args:
+            check (Callable): The function added to the list.
+        """        
+        self.checks.append(check)
 
 
 @_command_decorator
@@ -312,7 +326,7 @@ def check(command: Command, func: Callable) -> Command:
     """
     if not callable(func):
         raise CommandCheckError("Check function is not callable")
-    if not type(command) == Command:
+    if not type(command) in [Command, CommandGroup]:
         raise TypeError("Command does not subclass Command class.")
     
     command.add_check(func)
