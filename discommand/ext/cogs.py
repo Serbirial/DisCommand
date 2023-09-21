@@ -2,8 +2,6 @@ import sys
 import importlib.util
 import importlib.machinery
 
-from functools import wraps
-
 from typing_extensions import (
     Self,
     Any

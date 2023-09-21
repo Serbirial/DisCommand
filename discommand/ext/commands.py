@@ -125,7 +125,7 @@ class Command:
             raise CommandCheckError("One of the commands checks failed.")
 
         injected = hooked_wrapped_callback(self, bot, context, self.callback)
-        await injected(*context.args, **context.kwargs)
+        await injected(**context.args)
 
     def add_check(self, check: Callable) -> None:
         """Adds a check to the checks list.
@@ -137,12 +137,13 @@ class Command:
         
 def hooked_wrapped_callback(command: Command, bot, context, coro: Callable) -> Callable:
     @wraps(coro)
-    async def wrapped(*args, **kwargs):
+    async def wrapped(**args):
         try:
-            ret = await coro(command, bot, context, *args, **kwargs)
+            ret = await coro(command, bot, context, **args)
         except asyncio.CancelledError:
             return
         except Exception as exc:
+            print(exc)
             raise CommandInvokeError(exc) from exc
         return ret
 
@@ -212,7 +213,7 @@ class CommandGroup:
         if _do_checks(self.checks, context) != True:
             raise CommandCheckError("One of the commands checks failed.")
         injected = hooked_wrapped_callback(self, bot, context, self.callback)
-        await injected(*context.args, **context.kwargs)
+        await injected(**context.args)
         
 
     def add_command(self, command: Command) -> None:
