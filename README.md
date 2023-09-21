@@ -11,10 +11,11 @@
 from discommand.entry import inject
 from discommand.ext.events import process_message
 
-from discord.ext.commands import AutoShardedBot
+from discord import AutoShardedClient
 
 
-class YourBot(AutoShardedBot):
+
+class YourBot(AutoShardedClient):
 		super().__init__(
 			command_prefix="!",
 			case_insensitive=True)
