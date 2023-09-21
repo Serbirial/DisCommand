@@ -13,7 +13,8 @@ class CogManager:
         # FIXME: make internal only and have staticmethod to retrieve
         self._cogs: dict[str, cogs.Cog] = {}
 
-        self.all_commands: dict[str, Command] = {}
+        self.all_commands: dict[str, Command | CommandGroup] = {}
+        self.sub_commands: dict[str, Command] = {}
 
 
     def update_all_commands(self) -> None:
@@ -22,11 +23,12 @@ class CogManager:
                 print(f"Updating: {name}")
                 if type(command) == CommandGroup: # Add all the groups sub-commands so discord.py recognizes them too.
                     print("Found Group while updating...")
-                    print(command.commands)
                     for _name, _command in command.commands.items():
-                        self.all_commands[_name] = _command
+                        self.sub_commands[_name] = _command
                 self.all_commands[name] = command
+                
         self.client.all_commands = self.all_commands
+        self.client.sub_commands = self.sub_commands
 
     async def start_load_cogs(self, path: str) -> None:
         for file in listdir(path):
