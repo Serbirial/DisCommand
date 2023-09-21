@@ -9,6 +9,7 @@
 # Loading a cog and invoking commands.
 
 from discommand.entry import inject
+from discommand.ext.events import process_message
 
 from discord.ext.commands import AutoShardedBot
 
@@ -26,9 +27,9 @@ class YourBot(AutoShardedBot):
 		"""
 		if message.author.bot:
 			return
-		_context = await self.get_context(message)
-		if not _context.command is None:
-			return await _context.command.invoke(self, _context)
+		prefix = await self.get_prefix(message)
+		command, context = process_message(self, prefix, message)
+		await command.invoke(self, context)
 
 	async def on_ready(self):
         print("Loading all cogs in 'cogs/'")
@@ -61,9 +62,9 @@ class TestCog(cogs.Cog):
     
     @commands.check(is_not_bot)
     @commands.command("reply")
-    async def reply(self, bot, ctx):
+    async def reply(self, bot, ctx, what_to_say):
         ''' Custom command logic test. '''
-        return await ctx.send(f"Endpoint: {self.endpoint}\nName: {bot.user}")
+        return await ctx.send(f"Endpoint: {self.endpoint}\nName: {bot.user}\nReply: {what_to_say}")
 
     @commands.group("test")
     async def test(self, bot, ctx):
