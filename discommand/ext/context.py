@@ -2,7 +2,9 @@ from discord import (
     Message,
     Client,
     AutoShardedClient
-) 
+)
+from discord.channel import DMChannel, GroupChannel, PartialMessageable, StageChannel, TextChannel, VoiceChannel
+from discord.threads import Thread 
 from .commands import (
     Command,
     CommandGroup
@@ -89,7 +91,7 @@ class Context(Messageable):
 
 
     async def send(self, content: str, tts: bool = False, embed: Embed = None, mention_author: bool = False, delete_after: int = None):
-        return await super().send(
+        return await self.channel.send(
             content=content,
             tts=tts,
             embed=embed,
