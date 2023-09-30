@@ -103,8 +103,6 @@ def process_message(bot: Client | AutoShardedClient, prefixes: str | list, messa
     """
     if (prefix := _has_prefix(prefixes, message)) and (command := _find_command(bot, prefix, message.content)):
         args = _find_args(command, message)
-
-        print(f"Args: {args}")
         context = _create_context(message, bot, args=args, kwargs={}, prefix=prefixes, command=command, invoked_with=prefix, cls=context)
         return command, context
     print(command)
