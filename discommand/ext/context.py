@@ -32,7 +32,7 @@ class Context(Messageable):
             args: list[Any] | str,
             prefix: str | Callable | Coroutine,
             command: Command | CommandGroup,
-            invoked_with: Command | CommandGroup,
+            invoked_with: str,
             invoked_subcommand: Command
         ) -> None:
         self._message = message
@@ -42,10 +42,6 @@ class Context(Messageable):
         self.command = command
         self.invoked_with = invoked_with
         self.invoked_subcommand = invoked_subcommand
-
-
-    async def invoke(self, command: Command | CommandGroup):
-        return await command.invoke(self.bot, self)
 
     @property
     def message(self):

@@ -44,8 +44,11 @@ def _create_context(
 
 def _has_prefix(prefixes: list, message: Message) -> str:
     for prefix in prefixes:
-        if len(message.content.split(prefix))==2:
-            return prefix
+        try:
+            if len(message.content.split(prefix))==2:
+                return prefix
+        except ValueError:
+            pass
 
 def _find_command(bot: Client | AutoShardedClient, prefix: str, content: str) -> Command | None: 
     name = content.split(prefix, 1)[1].split(" ")
@@ -56,7 +59,8 @@ def _find_command(bot: Client | AutoShardedClient, prefix: str, content: str) ->
             elif name[0] in bot.all_commands:
                 return bot.all_commands[name[0]]
         except KeyError:
-            return None # FIXME: implment commandnotfound
+            if name[0] in bot.all_commands:
+                return bot.all_commands[name[0]]
     else:
         return bot.all_commands[name[0]] if name[0] in bot.all_commands else None
     
@@ -74,7 +78,7 @@ def _find_args(command: Command, message: Message) -> dict[str, str]:
         return None
     del args[:3]
     iteration = 0
-    _temp = " "
+    _temp = ""
     for arg in message.content.split(command.name, 1)[1].strip().split(" "):
         if iteration>=len(args):
             _temp += arg
@@ -99,7 +103,9 @@ def process_message(bot: Client | AutoShardedClient, prefixes: str | list, messa
     """
     if (prefix := _has_prefix(prefixes, message)) and (command := _find_command(bot, prefix, message.content)):
         args = _find_args(command, message)
-        context = _create_context(message, bot, args=args, kwargs={}, prefix=prefixes, command=command, invoked_with=command, cls=context)
+
+        print(f"Args: {args}")
+        context = _create_context(message, bot, args=args, kwargs={}, prefix=prefixes, command=command, invoked_with=prefix, cls=context)
         return command, context
-    else:
-        return None, message.channel
+    print(command)
+    return None, message.channel

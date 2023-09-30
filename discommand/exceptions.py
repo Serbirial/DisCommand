@@ -15,3 +15,6 @@ class CommandInvokeError(Exception):
 
 class CommandCheckError(CommandInvokeError):
     pass
+
+class NoSubCommands(FailedLoadingCog):
+    pass
