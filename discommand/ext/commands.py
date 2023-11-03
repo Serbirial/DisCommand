@@ -96,12 +96,14 @@ class Command:
                     callback: Callable,
                     nsfw: bool = False,
                     checks: list[Callable] = [],
-                    parent: Self = None
+                    parent: Self = None,
+                    aliases: list = []
                 ) -> None:
         new_cls = super().__new__(cls)
 
         # Command info
         new_cls.name = name
+        new_cls.aliases = aliases
         new_cls.nsfw = nsfw
         new_cls.description = description
         new_cls.parent = parent
@@ -125,7 +127,10 @@ class Command:
             raise CommandCheckError("One of the commands checks failed.")
 
         injected = hooked_wrapped_callback(self, bot, context, self.callback)
-        await injected(**context.args)
+        try:
+            await injected(**context.args)
+        except TypeError:
+            await injected()
 
     def add_check(self, check: Callable) -> None:
         """Adds a check to the checks list.
@@ -143,8 +148,9 @@ def hooked_wrapped_callback(command: Command, bot, context, coro: Callable) -> C
         except asyncio.CancelledError:
             return
         except Exception as exc:
-            print(exc)
-            raise CommandInvokeError(exc) from exc
+            if hasattr(bot, "error_handler"):
+                return await bot.error_handler(context, exc)
+            raise exc
         return ret
 
     return wrapped
@@ -153,8 +159,9 @@ def hooked_wrapped_callback(command: Command, bot, context, coro: Callable) -> C
 class CommandGroup:
     """Represents a group of commands, with a function to invoke the main command, and a list containing all the sub-commands.
     """    
-    def __init__(self, name: str, description: str, endpoint: str, callback: Callable[..., Any], nsfw: bool = False, checks: list[Callable[..., Any]] = []) -> None:
+    def __init__(self, name: str, description: str, endpoint: str, callback: Callable[..., Any], nsfw: bool = False, checks: list[Callable[..., Any]] = [], aliases: list = []) -> None:
         self.name = name
+        self.aliases = aliases
         self.description = description
         self.endpoint = endpoint
         self.nsfw = nsfw
@@ -213,8 +220,10 @@ class CommandGroup:
         if _do_checks(self.checks, context) != True:
             raise CommandCheckError("One of the commands checks failed.")
         injected = hooked_wrapped_callback(self, bot, context, self.callback)
-        await injected(**context.args)
-        
+        try:
+            await injected(**context.args)
+        except TypeError:
+            await injected()
 
     def add_command(self, command: Command) -> None:
         """Adds a command to the list of sub-commands, this should not be invoked manually unless you know what you are doing.
@@ -231,9 +240,17 @@ class CommandGroup:
         command.parent = self
         self.commands[command.name] = command
 
+    def add_check(self, check: Callable) -> None:
+        """Adds a check to the checks list.
+
+        Args:
+            check (Callable): The function added to the list.
+        """        
+        self.checks.append(check)
+
 
 @_command_decorator
-def command(func, api_endpoint: str = None, name: str = None, description: str = None, nsfw: bool =  False) -> Command:
+def command(func, api_endpoint: str = None, aliases: list = [], name: str = None, description: str = None, nsfw: bool =  False) -> Command:
     """Decorator for turning a regular function into a Command.
 
     Args:
@@ -262,6 +279,7 @@ def command(func, api_endpoint: str = None, name: str = None, description: str =
 
     _command = Command(
         name=name if name else func.__name__,
+        aliases=aliases,
         description=desc,
         callback=func,
         nsfw=nsfw,
@@ -270,7 +288,7 @@ def command(func, api_endpoint: str = None, name: str = None, description: str =
     return _command
 
 @_command_decorator
-def group(func, api_endpoint: str = None, name: str = None, description: str = None, nsfw: bool =  False) -> Command:
+def group(func, api_endpoint: str = None, aliases: list = [], name: str = None, description: str = None, nsfw: bool =  False) -> Command:
     """Decorator for turning a regular function into a Group Command.
 
     Args:
@@ -298,6 +316,7 @@ def group(func, api_endpoint: str = None, name: str = None, description: str = N
 
     _command = CommandGroup(
         name=name if name else func.__name__,
+        aliases=aliases,
         description=desc,
         callback=func,
         nsfw=nsfw,
@@ -312,7 +331,7 @@ def check(command: Command, func: Callable) -> Command:
     """
     if not callable(func):
         raise CommandCheckError("Check function is not callable")
-    if not type(command) == Command:
+    if not type(command) in [Command, CommandGroup]:
         raise TypeError("Command does not subclass Command class.")
     
     command.add_check(func)

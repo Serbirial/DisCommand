@@ -32,11 +32,7 @@ class Context(Messageable):
             bot: Client | AutoShardedClient,
             view: View = None,
             args: list[Any] | str,
-<<<<<<< Updated upstream
-            kwargs: dict[str, Any],
-=======
             kwargs: dict[Any],
->>>>>>> Stashed changes
             prefix: str | Callable | Coroutine,
             command: Command | CommandGroup,
             invoked_with: Command | CommandGroup,
@@ -97,11 +93,7 @@ class Context(Messageable):
     
 
 
-<<<<<<< Updated upstream
-    async def send(self, content: str, tts: bool = False, embed: Embed = None, mention_author: bool = False, delete_after: int = None):
-=======
     async def send(self, content: str = None, view = None, tts: bool = False, nonce: Any = None, file: Any = None, files: Any = None, stickers: Any = None, embeds: list[Embed] = None, embed: Embed = None, allowed_mentions: bool = True, mention_author: bool = False, silent: bool = False, suppress_embeds: bool = False, delete_after: int = None):
->>>>>>> Stashed changes
         return await self.channel.send(
             content=content,
             tts=tts,
@@ -114,13 +106,7 @@ class Context(Messageable):
             nonce=nonce,       # NOTE: idk what this is
             reference=None,
             mention_author=mention_author,
-<<<<<<< Updated upstream
-            view=None, # FIXME: support view, embed supression, and silent flag
-            suppress_embeds=None,
-            silent=False,
-=======
             view=view,
             silent=silent,
->>>>>>> Stashed changes
         ) 
     

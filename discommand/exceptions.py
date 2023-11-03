@@ -14,13 +14,10 @@ class CommandInvokeError(Exception):
     pass
 
 class CommandCheckError(CommandInvokeError):
-<<<<<<< Updated upstream
-=======
     pass
 
 class NoSubCommands(FailedLoadingCog):
     pass
 
 class Invalidevent(Exception):
->>>>>>> Stashed changes
     pass

@@ -78,14 +78,9 @@ def _create_context(
 
 def _has_prefix(prefixes: list, message: Message) -> str:
     for prefix in prefixes:
-<<<<<<< Updated upstream
-        if len(message.content.split(prefix))==2:
-            return prefix
-=======
             if message.content.startswith(prefix):
                 if len(message.content.split(prefix))==2:
                     return prefix
->>>>>>> Stashed changes
 
 def _look_for_alias(bot: Client | AutoShardedClient, command: str):
     for _command in bot.all_commands.values():
@@ -103,20 +98,6 @@ def _look_for_alias_sub(bot: Client | AutoShardedClient, command: str):
 
 def _find_command(bot: Client | AutoShardedClient, prefix: str, content: str) -> tuple[Command, str | None] | None: 
     name = content.split(prefix, 1)[1].split(" ")
-<<<<<<< Updated upstream
-    if len(name)>=2:
-        if bot.all_commands[name[0]] == bot.sub_commands[name[1]].parent:
-            return bot.sub_commands[name[1]]
-        elif name[0] in bot.all_commands:
-            return bot.all_commands[name[0]]
-    else:
-        return bot.all_commands[name[0]] if name[0] in bot.all_commands else None
-    
-def _process_arguments(content: str):
-    pass
-    
-def _find_args(command: Command, message: Message) -> dict[str, str]:
-=======
     if len(name) == 1: # Regular command with no args.
         real_name, alias = _look_for_alias(bot, name[0])
         if not alias: 
@@ -142,7 +123,6 @@ def _find_args(command: Command, message: Message) -> dict[str, str]:
 
 
 def _find_args(command: Command, message: Message, alias: str = None) -> dict[str, str]:
->>>>>>> Stashed changes
     try:
         args = inspect.getfullargspec(command.callback)[0]
     except ValueError:
@@ -155,15 +135,10 @@ def _find_args(command: Command, message: Message, alias: str = None) -> dict[st
         return None
     del args[:3]
     iteration = 0
-<<<<<<< Updated upstream
-    _temp = " "
-    for arg in message.content.split(command.name, 1)[1].strip().split(" "):
-=======
     _temp = ""
     for arg in split_content[1].strip().split(" "):
         if arg == "":
             continue
->>>>>>> Stashed changes
         if iteration>=len(args):
             _temp += f" {arg}"
         else: 
@@ -185,13 +160,6 @@ def process_message(bot: Client | AutoShardedClient, prefixes: str | list, messa
         Command: The command found
         Args (dict): All found args
     """
-<<<<<<< Updated upstream
-    if (prefix := _has_prefix(prefixes, message)):
-        if (command := _find_command(bot, prefix, message.content)):
-            args = _find_args(command, message)
-            context = _create_context(message, bot, args=args, kwargs={}, prefix=prefixes, command=command, invoked_with=command, cls=context)
-            return command, context
-=======
     if (prefix := _has_prefix(prefixes, message)) and (command_data := _find_command(bot, prefix, message.content)):
         alias = command_data[1]
         args = _find_args(command_data[0], message, alias)
@@ -236,4 +204,3 @@ def event(func, name: str = None) -> Command:
         callback=func,
     )
     return _event
->>>>>>> Stashed changes

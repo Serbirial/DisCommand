@@ -13,7 +13,13 @@ from ..exceptions import (
     CogExportsNotFound,
     CogExportsBad
 )
-from .commands import Command, CommandGroup
+
+from .commands import (
+    Command,
+    CommandGroup
+)
+
+from .events import Event
 
 class Cog(object):
     """Represents a collection of commands.
@@ -23,15 +29,19 @@ class Cog(object):
         name = name
         
         commands = {}
-        
+        events = {}
         # Get all methods that are of the Command type
-        method_list = [getattr(self, attribute) for attribute in dir(self) if type(getattr(self, attribute)) in [Command, CommandGroup]]
-        for method in method_list:
+        command_list = [getattr(self, attribute) for attribute in dir(self) if type(getattr(self, attribute)) in [Command, CommandGroup]]
+        event_list = [getattr(self, attribute) for attribute in dir(self) if type(getattr(self, attribute)) == Event]
+        for method in command_list:
             commands[method.name] = method
+        for method in event_list:
+            events[method.name] = method
 
         new_cls = super().__new__(cls)
         new_cls.name = name
         new_cls.commands = commands
+        new_cls.events = events
         new_cls.kwargs = kwargs
 
         return new_cls
