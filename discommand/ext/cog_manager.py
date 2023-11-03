@@ -29,11 +29,24 @@ class CogManager:
                 
         self.client.all_commands = self.all_commands
         self.client.sub_commands = self.sub_commands
+<<<<<<< Updated upstream
+=======
+        self.client.help = self.help_dict
+        print(self.help_dict)
+>>>>>>> Stashed changes
 
     async def start_load_cogs(self, path: str) -> None:
+        """Starts loading all .py files in the given path.
+
+        Args:
+            path (str): Path to folder containing cog files.
+
+        Raises:
+            CogNotFoundFromSpec: Raised of spec was not found while preparing cog.
+        """        
         for file in listdir(path):
             if file.endswith(".py"):
-                resolved_name = importlib.util.resolve_name(f"{path.strip('/')}.{file.split('.py')[0]}", None)
+                resolved_name = importlib.util.resolve_name(f"{path.replace('/', '.')}{file.split('.py')[0]}", None)
                 spec = importlib.util.find_spec(resolved_name)
                 if not spec:
                     raise CogNotFoundFromSpec("Spec was None while attempting to load cog file.")
