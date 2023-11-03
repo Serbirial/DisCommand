@@ -17,7 +17,11 @@ from typing import (
 from discord import (
     TextChannel,
     VoiceChannel,
-    StageChannel
+    StageChannel,
+    Guild,
+    User,
+    Member,
+    Permissions
 )
 from discord.ui import View
 
@@ -55,28 +59,28 @@ class Context(Messageable):
         return await command.invoke(self.bot, self)
 
     @property
-    def message(self):
+    def message(self) -> Message:
         return self._message
     
     @property
-    def guild(self):
+    def guild(self) -> Guild:
         return self.message.guild
     
     @property
-    def channel(self):
+    def channel(self) -> TextChannel | VoiceChannel | StageChannel:
         return self.message.channel
     
     @property
-    def author(self):
+    def author(self) -> Member | User | Client | AutoShardedClient: 
         return self.message.author
     
     @property
-    def me(self):
+    def me(self) -> Client | AutoShardedClient:
         return self.guild.me if self.guild else self.bot.user
     
 
     @property
-    def permissions(self):
+    def permissions(self) -> Permissions:
         _type = type(self.channel)
         #if _type == DMChannel:
         #    return None # FIXME: return DM permissions.
@@ -84,7 +88,7 @@ class Context(Messageable):
         # FIXME: interactions not implemented
 
     @property
-    def bot_permissions(self):
+    def bot_permissions(self) -> Permissions:
         return self.channel.permissions_for(self.bot)
 
     @property
