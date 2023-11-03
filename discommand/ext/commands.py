@@ -13,7 +13,7 @@ from typing_extensions import (
 )
 
 
-from ..exceptions import CommandInvokeError, CommandCheckError
+from ..exceptions import CommandCheckError
 
 def _shorten(
     input: str,
