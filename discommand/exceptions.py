@@ -21,3 +21,6 @@ class NoSubCommands(FailedLoadingCog):
 
 class Invalidevent(Exception):
     pass
+
+class ConverterError(CommandInvokeError):
+    pass
