@@ -19,6 +19,7 @@ from discord import (
     VoiceChannel,
     StageChannel
 )
+from discord.ui import View
 
 from discord.embeds import Embed
 from discord.abc import Messageable
@@ -29,8 +30,13 @@ class Context(Messageable):
             *,
             message: Message,
             bot: Client | AutoShardedClient,
+            view: View = None,
             args: list[Any] | str,
+<<<<<<< Updated upstream
             kwargs: dict[str, Any],
+=======
+            kwargs: dict[Any],
+>>>>>>> Stashed changes
             prefix: str | Callable | Coroutine,
             command: Command | CommandGroup,
             invoked_with: Command | CommandGroup,
@@ -40,6 +46,8 @@ class Context(Messageable):
         self._message = message
         self.bot = bot
         self.args =  args if args else {}
+        self.kwargs = kwargs if kwargs else {} 
+        self.view = view
         self.prefix = prefix
         self.command = command
         self.invoked_with = invoked_with
@@ -89,22 +97,30 @@ class Context(Messageable):
     
 
 
+<<<<<<< Updated upstream
     async def send(self, content: str, tts: bool = False, embed: Embed = None, mention_author: bool = False, delete_after: int = None):
+=======
+    async def send(self, content: str = None, view = None, tts: bool = False, nonce: Any = None, file: Any = None, files: Any = None, stickers: Any = None, embeds: list[Embed] = None, embed: Embed = None, allowed_mentions: bool = True, mention_author: bool = False, silent: bool = False, suppress_embeds: bool = False, delete_after: int = None):
+>>>>>>> Stashed changes
         return await self.channel.send(
             content=content,
             tts=tts,
             embed=embed,
-            embeds=None, #FIXME: support multiple embeds, files, stickers
-            file=None,
-            files=None,
-            stickers=None,
+            embeds=embeds,
+            file=file,
+            files=files,
+            stickers=stickers,
             delete_after=delete_after,
-            nonce=None,             # FIXME: Support none, mentions, reference
-            allowed_mentions=None,
+            nonce=nonce,       # NOTE: idk what this is
             reference=None,
             mention_author=mention_author,
+<<<<<<< Updated upstream
             view=None, # FIXME: support view, embed supression, and silent flag
             suppress_embeds=None,
             silent=False,
+=======
+            view=view,
+            silent=silent,
+>>>>>>> Stashed changes
         ) 
     
