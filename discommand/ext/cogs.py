@@ -29,20 +29,22 @@ class Cog(object):
         name = name
         
         commands = {}
-        events = {}
+        events = []
         # Get all methods that are of the Command type
         command_list = [getattr(self, attribute) for attribute in dir(self) if type(getattr(self, attribute)) in [Command, CommandGroup]]
-        event_list = [getattr(self, attribute) for attribute in dir(self) if type(getattr(self, attribute)) == Event]
         for method in command_list:
             commands[method.name] = method
-        for method in event_list:
-            events[method.name] = method
+        event_list = [getattr(self, attribute) for attribute in dir(self) if type(getattr(self, attribute)) == Event]
+        for event in event_list:
+            events.append(event)
 
         new_cls = super().__new__(cls)
         new_cls.name = name
         new_cls.commands = commands
         new_cls.events = events
         new_cls.kwargs = kwargs
+
+        del [command_list, event_list]
 
         return new_cls
 

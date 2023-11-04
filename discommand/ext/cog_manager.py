@@ -4,6 +4,7 @@ from os import listdir
 
 from . import cogs
 from .commands import Command, CommandGroup
+from .events import Event
 from ..exceptions import CogNotFoundFromSpec, NoSubCommands
 
 class CogManager:
@@ -17,6 +18,7 @@ class CogManager:
             0: {}, # Normal commands
             1: {}  # Group commands
         }
+        self.events:       dict[str, Event] = {}
         self.all_commands: dict[str, Command | CommandGroup] = {}
         self.sub_commands: dict[str, Command] = {}
 
@@ -31,6 +33,7 @@ class CogManager:
                 return {
                     "desc": command.description
                 }
+                
 
     def update_all_commands(self) -> None:
         for _, cog in self._cogs.items():
@@ -55,10 +58,17 @@ class CogManager:
                     self.all_commands[name] = command
                     self.help_dict[0][_][command.name] = self.build_help_dict(command)
                 
+            for event in cog.events:
+                if event.event_name not in self.events:
+                    self.events[event.event_name] = [event]
+                else:
+                    self.events[event.event_name].append(event)
+                
         self.client.all_commands = self.all_commands
         self.client.sub_commands = self.sub_commands
         self.client.help = self.help_dict
         print(self.help_dict)
+        print(self.events)
 
     async def start_load_cogs(self, path: str) -> None:
         """Starts loading all .py files in the given path.

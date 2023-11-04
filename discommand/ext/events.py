@@ -20,22 +20,6 @@ from .commands import (
 
 from .context import Context
 
-class Event:
-    def __new__(    cls,
-                    name: str,
-                    callback: Callable
-                ):
-        new_cls = super().__new__(cls)
-        
-        new_cls.name = name
-        new_cls.callback = callback
-        
-        return new_cls
-    
-    async def invoke(self, bot, context):
-        injected = hooked_wrapped_callback(self, bot, context, self.callback)
-        await injected()
-
 def _event_decorator(decorator) -> Callable: # FIXME: dont have same code in 2 files
     """Allows for a decorator to have un-named and named arguments.
 
@@ -50,6 +34,23 @@ def _event_decorator(decorator) -> Callable: # FIXME: dont have same code in 2 f
             return decorator(event, *args, **kwargs)
         return layer2
     return layer1
+
+
+class Event:
+    def __new__(    cls,
+                    event_name: str,
+                    callback: Callable
+                ):
+        new_cls = super().__new__(cls)
+        
+        new_cls.event_name = event_name
+        new_cls.callback = callback
+        
+        return new_cls
+    
+    async def invoke(self):
+        return self.callback
+
 
 def _create_context(
         message: Message,
@@ -84,16 +85,22 @@ def _has_prefix(prefixes: list, message: Message) -> str:
 
 def _look_for_alias(bot: Client | AutoShardedClient, command: str):
     for _command in bot.all_commands.values():
-        for alias in _command.aliases:
-            if alias == command:
-                return _command.name, alias
+        if command not in _command.aliases:
+            pass
+        else:
+            for alias in _command.aliases:
+                if alias == command:
+                    return _command.name, alias
     return None, None
 
 def _look_for_alias_sub(bot: Client | AutoShardedClient, command: str):
     for _command in bot.sub_commands.values():
-        for alias in _command.aliases:
-            if alias == command:
-                return _command.name, alias
+        if command not in _command.aliases:
+            pass
+        else:
+            for alias in _command.aliases:
+                if alias == command:
+                    return _command.name, alias
     return None, None
 
 def _find_command(bot: Client | AutoShardedClient, prefix: str, content: str) -> tuple[Command, str | None] | None: 
@@ -107,7 +114,7 @@ def _find_command(bot: Client | AutoShardedClient, prefix: str, content: str) ->
         
     elif len(name)>=2: # Possible sub commands, or regular command with args.
         parent_real, parent_alias = _look_for_alias(bot, name[0])
-        if not parent_alias:
+        if not parent_alias: # Was not a sub-command, doesnt have parent, possibly arguments.
             if name[0] in bot.all_commands and name[1] in bot.sub_commands:
                 return (bot.all_commands[name[0]].commands[name[1]], None)
             
@@ -175,32 +182,30 @@ def inject_events(bot: Client | AutoShardedClient, events: list[Callable]) -> No
         bot (Client | AutoShardedClient): Initialized discord.py bot.
         events (list[Callable]): List of callables to inject.
     """
-    for event in events:
-        print(f"Adding event: {event.__name__}")
-        setattr(bot, event.__name__, event)
+
 
 @_event_decorator
-def event(func, name: str = None) -> Command:
-    """Decorator for turning a regular function into a registered event.
+def register(func, event_name: str = None) -> bool:
+	"""Decorator for registering a function as an event.
 
-    Args:
-        name (str): Name of the command being registered.
-        description (str, optional): Description of the command. Defaults to None.
-        api_url (str, optional): The commands API endpoint. Defaults to None.
-        nsfw (bool, optional): Controls if the command is marked as NSFW-only or not. Defaults to False.
+	Args:
+		event_name (str): Name of the event being registered to the function.
 
-    Returns:
-        Command: Command object with all needed data.
-    """
+	Raises:
+		TypeError: Function was not a coroutine.
 
-    if not inspect.iscoroutinefunction(func):
-        raise TypeError('command function must be a coroutine function')
+	Returns:
+		bool: True if sucessfully registered to the event manager. False if something went wrong.
+	"""
 
-    if not name:
-        name = func.__name__
+	if not inspect.iscoroutinefunction(func):
+		raise TypeError('Event function must be a coroutine function')
 
-    _event = Event(
-        name=name if name else func.__name__,
-        callback=func,
-    )
-    return _event
+	if not event_name:
+		event_name = func.__name__
+
+	_event = Event(
+		event_name=event_name if event_name else func.__name__,
+		callback=func,
+	)
+	return _event
