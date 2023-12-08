@@ -70,7 +70,7 @@ class CogManager:
         print(self.help_dict)
         print(self.events)
 
-    async def start_load_cogs(self, path: str) -> None:
+    async def start_load_cogs(self, path: str, update_commands: bool = True) -> None:
         """Starts loading all .py files in the given path.
 
         Args:
@@ -88,4 +88,5 @@ class CogManager:
                 exports = await cogs._load_cog_from_spec(self.client, spec, None)
                 
                 self._cogs[exports["name"]] = exports["cog"]
-        self.update_all_commands()
+        if update_commands:
+            self.update_all_commands()
