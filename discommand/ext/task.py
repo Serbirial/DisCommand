@@ -23,7 +23,7 @@ def run_in_background(coro: Coroutine) -> Task:
     Returns:
         Task: The task created.
     """    
-    create_task(coro)
+    return create_task(coro)
 
 def run_in_background_promise(coro: Coroutine, timeout: int = 7) -> Any:
     """Runs coroutine and returns un-awaited `asyncio.wait` function for you to await when ready.
