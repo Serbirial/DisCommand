@@ -24,6 +24,7 @@ class EventManager:
 	def __init__(self, bot):
 		self.client = bot
 		self.listeners = bot.cog_manager.events
+        
 
 	def dispatcher(self, event: str, /, *args, **kwargs):
 		method = f"on_{event}" 

@@ -8,332 +8,330 @@ from collections.abc import Callable
 from textwrap import TextWrapper
 from functools import wraps, partial
 from typing_extensions import (
-    Self,
-    Any
+	Self,
+	Any
 )
 
 
 from ..exceptions import CommandCheckError
 
 def _shorten(
-    input: str,
-    *,
-    _wrapper: TextWrapper = TextWrapper(width=100, max_lines=1, replace_whitespace=True, placeholder='…'), #TODO: figure out what placeholder really does
+	input: str,
+	*,
+	_wrapper: TextWrapper = TextWrapper(width=100, max_lines=1, replace_whitespace=True, placeholder='…'), #TODO: figure out what placeholder really does
 ) -> str:
-    try:
-        # split on the first double newline since arguments may appear after that
-        input, _ = re.split(r'\n\s*\n', input, maxsplit=1)
-    except ValueError:
-        pass
-    return _wrapper.fill(' '.join(input.strip().split()))
+	try:
+		# split on the first double newline since arguments may appear after that
+		input, _ = re.split(r'\n\s*\n', input, maxsplit=1)
+	except ValueError:
+		pass
+	return _wrapper.fill(' '.join(input.strip().split()))
 
 def _do_checks(checks: list[Callable], context) -> bool:
-    """Does all checks and returns True if they all pass, or False if one doesnt pass.
+	"""Does all checks and returns True if they all pass, or False if one doesnt pass.
 
-    Args:
-        checks (list[Callable]): The list of checks to execute.
-        context: The context to run the check within.
+	Args:
+		checks (list[Callable]): The list of checks to execute.
+		context: The context to run the check within.
 
-    Raises:
-        TypeError: One of the checks are not of type Callable
-        CommandCheckError: One of the checks failed.
+	Raises:
+		TypeError: One of the checks are not of type Callable
+		CommandCheckError: One of the checks failed.
 
-    Returns:
-        bool: True if all the checks pass. False if one doesnt pass.
-    """    
-    _checks = []
-    for check in checks:
-        if not callable(check):
-            raise TypeError("Check is not callable.")
-        if not check(context) == True:
-            pass
-        _checks.append(1)
-    if len(_checks) != len(checks):
-        return False
-    else:
-        return True
+	Returns:
+		bool: True if all the checks pass. False if one doesnt pass.
+	"""    
+	_checks = []
+	for check in checks:
+		if not callable(check):
+			raise TypeError("Check is not callable.")
+		if not check(context) == True:
+			pass
+		_checks.append(1)
+	if len(_checks) != len(checks):
+		return False
+	else:
+		return True
 
 
 def _command_decorator(decorator) -> Callable:
-    """Allows for a decorator to have un-named and named arguments.
+	"""Allows for a decorator to have un-named and named arguments.
 
-    Args:
-        decorator (Callable): The decorator to wrap.
+	Args:
+		decorator (Callable): The decorator to wrap.
 
-    Returns:
-        Callable: The wrapped decorator
-    """
-    def layer1(*args, **kwargs):
-        def layer2(command):
-            return decorator(command, *args, **kwargs)
-        return layer2
-    return layer1
+	Returns:
+		Callable: The wrapped decorator
+	"""
+	def layer1(*args, **kwargs):
+		def layer2(command):
+			return decorator(command, *args, **kwargs)
+		return layer2
+	return layer1
 
 def _group_command_decorator(decorator) -> Callable:
-    """Copy of `_command_decorator` allowing for usage inside of a class.
+	"""Copy of `_command_decorator` allowing for usage inside of a class.
 
-    Args:
-        decorator (Callable): The decorator to wrap.
+	Args:
+		decorator (Callable): The decorator to wrap.
 
-    Returns:
-        Callable: The wrapped decorator
-    """
-    def layer1(*args, **kwargs):
-        @wraps(decorator)
-        def layer2(command):
-            return decorator(command, *args, **kwargs)
-        return layer2
-    return layer1
+	Returns:
+		Callable: The wrapped decorator
+	"""
+	def layer1(*args, **kwargs):
+		@wraps(decorator)
+		def layer2(command):
+			return decorator(command, *args, **kwargs)
+		return layer2
+	return layer1
 
 
 class Command:
-    """An instance of a Command, containing all information about the command and a function to invoke it.
-    """    
-    def __new__(    cls,
-                    name: str,
-                    description: str,
-                    endpoint: str,
-                    callback: Callable,
-                    nsfw: bool = False,
-                    checks: list[Callable] = [],
-                    parent: Self = None,
-                    aliases: list = []
-                ) -> None:
-        new_cls = super().__new__(cls)
+	"""An instance of a Command, containing all information about the command and a function to invoke it.
+	"""    
+	def __new__(    cls,
+					name: str,
+					description: str,
+					endpoint: str,
+					callback: Callable,
+					nsfw: bool = False,
+					checks: list[Callable] = [],
+					parent: Self = None,
+					aliases: list = []
+				) -> None:
+		new_cls = super().__new__(cls)
 
-        # Command info
-        new_cls.name = name
-        new_cls.aliases = aliases
-        new_cls.nsfw = nsfw
-        new_cls.description = description
-        new_cls.parent = parent
+		# Command info
+		new_cls.name = name
+		new_cls.aliases = aliases
+		new_cls.nsfw = nsfw
+		new_cls.description = description
+		new_cls.parent = parent
 
-        # Actual command data
-        new_cls.endpoint = endpoint
-        new_cls.callback = callback
-        new_cls.checks = checks
+		# Actual command data
+		new_cls.endpoint = endpoint
+		new_cls.callback = callback
+		new_cls.checks = checks
 
 
-        return new_cls
+		return new_cls
 
-    async def invoke(self, bot, context): # FIXME: type check context
-        """Invokes the command within the given context, also supplying the command with a reference of `bot`.
+	async def invoke(self, bot, context): # FIXME: type check context
+		"""Invokes the command within the given context, also supplying the command with a reference of `bot`.
 
-        Args:
-            bot: Initialized discord.py bot instance.
-            context: Context for the command to be ran within.
-        """  
-        if _do_checks(self.checks, context) != True:
-            raise CommandCheckError("One of the commands checks failed.")
+		Args:
+			bot: Initialized discord.py bot instance.
+			context: Context for the command to be ran within.
+		"""  
+		if _do_checks(self.checks, context) != True:
+			raise CommandCheckError("One of the commands checks failed.")
 
-        injected = hooked_wrapped_callback(self, bot, context, self.callback)
-        try:
-            await injected(**context.args)
-        except TypeError:
-            await injected()
+		injected = hooked_wrapped_callback(self, bot, context, self.callback)
+		try:
+			await injected(**context.args)
+		except TypeError:
+			await injected()
 
-    def add_check(self, check: Callable) -> None:
-        """Adds a check to the checks list.
+	def add_check(self, check: Callable) -> None:
+		"""Adds a check to the checks list.
 
-        Args:
-            check (Callable): The function added to the list.
-        """        
-        self.checks.append(check)
-        
+		Args:
+			check (Callable): The function added to the list.
+		"""        
+		self.checks.append(check)
+		
 def hooked_wrapped_callback(command: Command, bot, context, coro: Callable) -> Callable:
-    @wraps(coro)
-    async def wrapped(**args):
-        try:
-            ret = await coro(command, bot, context, **args)
-        except asyncio.CancelledError:
-            return
-        except Exception as exc:
-            if hasattr(bot, "error_handler"):
-                return await bot.error_handler(context, exc)
-            raise exc
-        return ret
+	@wraps(coro)
+	async def wrapped(**args):
+		try:
+			ret = await coro(command, bot, context, **args)
+		except asyncio.CancelledError:
+			return
+		except Exception as exc:
+			return bot.dispatch("command_error", *(context, exc))
+		return ret
 
-    return wrapped
+	return wrapped
 
 # FIXME: add checks to command group, currently only works with regular command
 class CommandGroup:
-    """Represents a group of commands, with a function to invoke the main command, and a list containing all the sub-commands.
-    """    
-    def __init__(self, name: str, description: str, endpoint: str, callback: Callable[..., Any], nsfw: bool = False, checks: list[Callable[..., Any]] = [], aliases: list = []) -> None:
-        self.name = name
-        self.aliases = aliases
-        self.description = description
-        self.endpoint = endpoint
-        self.nsfw = nsfw
+	"""Represents a group of commands, with a function to invoke the main command, and a list containing all the sub-commands.
+	"""    
+	def __init__(self, name: str, description: str, endpoint: str, callback: Callable[..., Any], nsfw: bool = False, checks: list[Callable[..., Any]] = [], aliases: list = []) -> None:
+		self.name = name
+		self.aliases = aliases
+		self.description = description
+		self.endpoint = endpoint
+		self.nsfw = nsfw
 
-        self.checks = checks
-        self.callback =  callback
+		self.checks = checks
+		self.callback =  callback
 
-        self.commands: dict[str, Command] = {}
+		self.commands: dict[str, Command] = {}
 
-    @_group_command_decorator
-    def command(func, group, api_endpoint: str = None, name: str = None, description: str = None, nsfw: bool =  False) -> Command:
-        """Decorator for turning a regular function into a Command within a Group.
+	@_group_command_decorator
+	def command(func, group, api_endpoint: str = None, name: str = None, description: str = None, nsfw: bool =  False) -> Command:
+		"""Decorator for turning a regular function into a Command within a Group.
 
-        Args:
-            name (str): Name of the command being registered.
-            description (str, optional): Description of the command. Defaults to None.
-            api_url (str, optional): The commands API endpoint. Defaults to None.
-            nsfw (bool, optional): Controls if the command is marked as NSFW-only or not. Defaults to False.
+		Args:
+			name (str): Name of the command being registered.
+			description (str, optional): Description of the command. Defaults to None.
+			api_url (str, optional): The commands API endpoint. Defaults to None.
+			nsfw (bool, optional): Controls if the command is marked as NSFW-only or not. Defaults to False.
 
-        Returns:
-            Command: Command object with all needed data.
-        """
+		Returns:
+			Command: Command object with all needed data.
+		"""
 
-        if not inspect.iscoroutinefunction(func):
-            raise TypeError('command function must be a coroutine function')
+		if not inspect.iscoroutinefunction(func):
+			raise TypeError('command function must be a coroutine function')
 
-        if not name:
-            name = func.__name__
+		if not name:
+			name = func.__name__
 
-        if not description:
-            if func.__doc__ is None:
-                desc = 'Help has not been made for this command yet.'
-            else:
-                desc = _shorten(func.__doc__)
-        else:
-            desc = description
+		if not description:
+			if func.__doc__ is None:
+				desc = 'Help has not been made for this command yet.'
+			else:
+				desc = _shorten(func.__doc__)
+		else:
+			desc = description
 
-        _command = Command(
-            name=name if name else func.__name__,
-            description=desc,
-            callback=func,
-            nsfw=nsfw,
-            endpoint=api_endpoint,
-            parent=group
-        )
-        group.add_command(_command)
-        return _command
+		_command = Command(
+			name=name if name else func.__name__,
+			description=desc,
+			callback=func,
+			nsfw=nsfw,
+			endpoint=api_endpoint,
+			parent=group
+		)
+		group.add_command(_command)
+		return _command
 
-    async def invoke(self, bot, context):
-        """Invokes the command within the given context, also supplying the command with a reference of `bot`.
+	async def invoke(self, bot, context):
+		"""Invokes the command within the given context, also supplying the command with a reference of `bot`.
 
-        Args:
-            bot: Initialized discord.py bot instance.
-            context: Context for the command to be ran within.
-        """
-        if _do_checks(self.checks, context) != True:
-            raise CommandCheckError("One of the commands checks failed.")
-        injected = hooked_wrapped_callback(self, bot, context, self.callback)
-        try:
-            await injected(**context.args)
-        except TypeError:
-            await injected()
+		Args:
+			bot: Initialized discord.py bot instance.
+			context: Context for the command to be ran within.
+		"""
+		if _do_checks(self.checks, context) != True:
+			raise CommandCheckError("One of the commands checks failed.")
+		injected = hooked_wrapped_callback(self, bot, context, self.callback)
+		try:
+			await injected(**context.args)
+		except TypeError:
+			await injected()
 
-    def add_command(self, command: Command) -> None:
-        """Adds a command to the list of sub-commands, this should not be invoked manually unless you know what you are doing.
+	def add_command(self, command: Command) -> None:
+		"""Adds a command to the list of sub-commands, this should not be invoked manually unless you know what you are doing.
 
-        Args:
-            command (Command): The command to be added to the list.
+		Args:
+			command (Command): The command to be added to the list.
 
-        Raises:
-            TypeError: Returned if the given command is not a subclass of Command.
-        """        
-        if not isinstance(command, Command):
-            raise TypeError('The command passed must be a subclass of Command')
-        
-        command.parent = self
-        self.commands[command.name] = command
+		Raises:
+			TypeError: Returned if the given command is not a subclass of Command.
+		"""        
+		if not isinstance(command, Command):
+			raise TypeError('The command passed must be a subclass of Command')
+		
+		command.parent = self
+		self.commands[command.name] = command
 
-    def add_check(self, check: Callable) -> None:
-        """Adds a check to the checks list.
+	def add_check(self, check: Callable) -> None:
+		"""Adds a check to the checks list.
 
-        Args:
-            check (Callable): The function added to the list.
-        """        
-        self.checks.append(check)
+		Args:
+			check (Callable): The function added to the list.
+		"""        
+		self.checks.append(check)
 
 
 @_command_decorator
 def command(func, api_endpoint: str = None, aliases: list = [], name: str = None, description: str = None, nsfw: bool =  False) -> Command:
-    """Decorator for turning a regular function into a Command.
+	"""Decorator for turning a regular function into a Command.
 
-    Args:
-        name (str): Name of the command being registered.
-        description (str, optional): Description of the command. Defaults to None.
-        api_url (str, optional): The commands API endpoint. Defaults to None.
-        nsfw (bool, optional): Controls if the command is marked as NSFW-only or not. Defaults to False.
+	Args:
+		name (str): Name of the command being registered.
+		description (str, optional): Description of the command. Defaults to None.
+		api_url (str, optional): The commands API endpoint. Defaults to None.
+		nsfw (bool, optional): Controls if the command is marked as NSFW-only or not. Defaults to False.
 
-    Returns:
-        Command: Command object with all needed data.
-    """
+	Returns:
+		Command: Command object with all needed data.
+	"""
 
-    if not inspect.iscoroutinefunction(func):
-        raise TypeError('command function must be a coroutine function')
+	if not inspect.iscoroutinefunction(func):
+		raise TypeError('command function must be a coroutine function')
 
-    if not name:
-        name = func.__name__
+	if not name:
+		name = func.__name__
 
-    if not description:
-        if func.__doc__ is None:
-            desc = 'Help has not been made for this command yet.'
-        else:
-            desc = _shorten(func.__doc__)
-    else:
-        desc = description
+	if not description:
+		if func.__doc__ is None:
+			desc = 'Help has not been made for this command yet.'
+		else:
+			desc = _shorten(func.__doc__)
+	else:
+		desc = description
 
-    _command = Command(
-        name=name if name else func.__name__,
-        aliases=aliases,
-        description=desc,
-        callback=func,
-        nsfw=nsfw,
-        endpoint=api_endpoint
-    )
-    return _command
+	_command = Command(
+		name=name if name else func.__name__,
+		aliases=aliases,
+		description=desc,
+		callback=func,
+		nsfw=nsfw,
+		endpoint=api_endpoint
+	)
+	return _command
 
 @_command_decorator
 def group(func, api_endpoint: str = None, aliases: list = [], name: str = None, description: str = None, nsfw: bool =  False) -> Command:
-    """Decorator for turning a regular function into a Group Command.
+	"""Decorator for turning a regular function into a Group Command.
 
-    Args:
-        name (str): Name of the command being registered.
-        description (str, optional): Description of the command. Defaults to None.
-        api_url (str, optional): The commands API endpoint. Defaults to None.
-        nsfw (bool, optional): Controls if the command is marked as NSFW-only or not. Defaults to False.
+	Args:
+		name (str): Name of the command being registered.
+		description (str, optional): Description of the command. Defaults to None.
+		api_url (str, optional): The commands API endpoint. Defaults to None.
+		nsfw (bool, optional): Controls if the command is marked as NSFW-only or not. Defaults to False.
 
-    Returns:
-        Command: Command object with all needed data.
-    """
-    if not inspect.iscoroutinefunction(func):
-        raise TypeError('command function must be a coroutine function')
+	Returns:
+		Command: Command object with all needed data.
+	"""
+	if not inspect.iscoroutinefunction(func):
+		raise TypeError('command function must be a coroutine function')
 
-    if not name:
-        name = func.__name__
+	if not name:
+		name = func.__name__
 
-    if not description:
-        if func.__doc__ is None:
-            desc = 'Help has not been made for this command yet.'
-        else:
-            desc = _shorten(func.__doc__)
-    else:
-        desc = description
+	if not description:
+		if func.__doc__ is None:
+			desc = 'Help has not been made for this command yet.'
+		else:
+			desc = _shorten(func.__doc__)
+	else:
+		desc = description
 
-    _command = CommandGroup(
-        name=name if name else func.__name__,
-        aliases=aliases,
-        description=desc,
-        callback=func,
-        nsfw=nsfw,
-        endpoint=api_endpoint
-    )
-    return _command
+	_command = CommandGroup(
+		name=name if name else func.__name__,
+		aliases=aliases,
+		description=desc,
+		callback=func,
+		nsfw=nsfw,
+		endpoint=api_endpoint
+	)
+	return _command
 
 
 @_command_decorator
 def check(command: Command, func: Callable) -> Command:
-    """Decorator for adding a check to the command.
-    """
-    if not callable(func):
-        raise CommandCheckError("Check function is not callable")
-    if not type(command) in [Command, CommandGroup]:
-        raise TypeError("Command does not subclass Command class.")
-    
-    command.add_check(func)
+	"""Decorator for adding a check to the command.
+	"""
+	if not callable(func):
+		raise CommandCheckError("Check function is not callable")
+	if not type(command) in [Command, CommandGroup]:
+		raise TypeError("Command does not subclass Command class.")
+	
+	command.add_check(func)
 
-    return command
+	return command

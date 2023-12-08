@@ -74,9 +74,7 @@ async def emoji(context, to_convert: Any):
 
 
 
-
-
-async def integer(context, to_convert: Any) -> int:
+async def integer(to_convert: Any) -> int:
     """Converts to_convert to an integer is possible
 
     Args:
