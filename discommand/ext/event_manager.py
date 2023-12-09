@@ -8,15 +8,15 @@ from functools import wraps
 def hooked_wrapped_callback(bot, coro: Callable) -> Callable:
 	@wraps(coro)
 	async def wrapped(args):
-		if len(args)>1:
+		if len(args)==1:
+			ret = await coro(bot, args)
+		else:
 			try:
 				ret = await coro(bot, *args)
 			except asyncio.CancelledError:
 				return
 			except Exception as exc:
 				raise exc
-		else:
-			ret = await coro(bot, args)
 		return ret
 
 	return wrapped
