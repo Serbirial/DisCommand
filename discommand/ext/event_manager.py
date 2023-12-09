@@ -23,13 +23,11 @@ def hooked_wrapped_callback(bot, coro: Callable) -> Callable:
 class EventManager:
 	def __init__(self, bot):
 		self.client = bot
-		self.listeners = bot.cog_manager.events
-        
 
 	def dispatcher(self, event: str, /, *args, **kwargs):
 		method = f"on_{event}" 
 
-		if method in self.listeners:
-			for event in self.listeners[method]:
+		if method in self.client.cog_manager.events:
+			for event in self.client.cog_manager.events[method]:
 				injected = hooked_wrapped_callback(self.client, event.callback)
 				task.run_in_background(injected(args))
