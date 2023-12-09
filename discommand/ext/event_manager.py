@@ -9,7 +9,7 @@ def hooked_wrapped_callback(bot, coro: Callable) -> Callable:
 	@wraps(coro)
 	async def wrapped(args):
 		if len(args)==1:
-			ret = await coro(bot, args)
+			ret = await coro(bot, args[0])
 		else:
 			try:
 				ret = await coro(bot, *args)
