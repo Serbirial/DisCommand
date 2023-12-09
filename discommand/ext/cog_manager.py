@@ -97,7 +97,8 @@ class CogManager:
 		Raises:
 			CogNotFoundFromSpec: Raised of spec was not found while preparing cog.
 		"""
-		self.cached_paths.append(path)
+		if path not in self.cached_paths:
+			self.cached_paths.append(path)
 		for file in listdir(path):
 			if file.endswith(".py"):
 				resolved_name = importlib.util.resolve_name(f"{path.replace('/', '.')}{file.split('.py')[0]}", None)
