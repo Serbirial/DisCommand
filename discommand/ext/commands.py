@@ -269,10 +269,10 @@ def command(func, api_endpoint: str = None, **kwargs) -> Command:
 	Returns:
 		Command: Command object with all needed data.
 	"""
-	aliases = kwargs.pop("aliases")
-	name = kwargs.pop("name")
-	description = kwargs.pop("description")
-	nsfw = kwargs.pop("nsfw")
+	aliases = kwargs.pop("aliases", [])
+	name = kwargs.pop("name", None)
+	description = kwargs.pop("description", None)
+	nsfw = kwargs.pop("nsfw", False)
 
 	if not inspect.iscoroutinefunction(func):
 		raise TypeError('command function must be a coroutine function')
