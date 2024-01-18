@@ -88,6 +88,25 @@ class CogManager:
 		self.client.sub_commands = self.sub_commands
 		self.client.help = self.help_dict
 
+
+	async def load_cog(self, path: str, update_commands: bool = True) -> None:
+		"""Loads a single cog file.
+
+		Args:
+			path (str): Full Path to the file containg the cog. 
+
+		Raises:
+			CogNotFoundFromSpec: Raised of spec was not found while preparing cog.
+		"""
+		resolved_name = importlib.util.resolve_name(f"{path.split('.py')[0].replace('/', '.')}", None)
+		spec = importlib.util.find_spec(resolved_name)
+		if not spec:
+			raise CogNotFoundFromSpec("Spec was None while attempting to load cog file.")
+		exports = await cogs._load_cog_from_spec(self.client, spec, None)
+		self._cogs[exports["name"]] = exports["cog"]
+		if update_commands:
+			self.update_all_commands()
+
 	async def load_cogs(self, path: str, update_commands: bool = True) -> None:
 		"""Starts loading all .py files in the given path.
 
