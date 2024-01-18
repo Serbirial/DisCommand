@@ -97,9 +97,10 @@ class Command:
 					nsfw: bool = False,
 					checks: list[Callable] = [],
 					parent: Self = None,
-					aliases: list = []
+					aliases: list = [],
+					**extras
 				) -> None:
-		new_cls = super().__new__(cls)
+		new_cls = super().__new__(cls) # NOTE: why do i use __new__ here and __init__ with the command group? oh well
 
 		# Command info
 		new_cls.name = name
@@ -112,6 +113,10 @@ class Command:
 		new_cls.endpoint = endpoint
 		new_cls.callback = callback
 		new_cls.checks = checks
+
+		# Setting any extra data
+		for key, value in extras.items():
+			setattr(new_cls, key, value)
 
 
 		return new_cls
@@ -157,7 +162,7 @@ def hooked_wrapped_callback(command: Command, bot, context, coro: Callable) -> C
 class CommandGroup:
 	"""Represents a group of commands, with a function to invoke the main command, and a list containing all the sub-commands.
 	"""    
-	def __init__(self, name: str, description: str, endpoint: str, callback: Callable[..., Any], nsfw: bool = False, checks: list[Callable[..., Any]] = [], aliases: list = []) -> None:
+	def __init__(self, name: str, description: str, endpoint: str, callback: Callable[..., Any], nsfw: bool = False, checks: list[Callable[..., Any]] = [], aliases: list = [], **extras) -> None:
 		self.name = name
 		self.aliases = aliases
 		self.description = description
@@ -168,6 +173,10 @@ class CommandGroup:
 		self.callback =  callback
 
 		self.commands: dict[str, Command] = {}
+
+		# Setting any extra data
+		for key, value in extras.items():
+			setattr(self, key, value)
 
 	@_group_command_decorator
 	def command(func, group, api_endpoint: str = None, name: str = None, description: str = None, nsfw: bool =  False) -> Command:
@@ -248,7 +257,7 @@ class CommandGroup:
 
 
 @_command_decorator
-def command(func, api_endpoint: str = None, aliases: list = [], name: str = None, description: str = None, nsfw: bool =  False) -> Command:
+def command(func, api_endpoint: str = None, **kwargs) -> Command:
 	"""Decorator for turning a regular function into a Command.
 
 	Args:
@@ -260,6 +269,10 @@ def command(func, api_endpoint: str = None, aliases: list = [], name: str = None
 	Returns:
 		Command: Command object with all needed data.
 	"""
+	aliases = kwargs.pop("aliases")
+	name = kwargs.pop("name")
+	description = kwargs.pop("description")
+	nsfw = kwargs.pop("nsfw")
 
 	if not inspect.iscoroutinefunction(func):
 		raise TypeError('command function must be a coroutine function')
@@ -282,6 +295,7 @@ def command(func, api_endpoint: str = None, aliases: list = [], name: str = None
 		callback=func,
 		nsfw=nsfw,
 		endpoint=api_endpoint
+		**kwargs # Add any extras
 	)
 	return _command
 
