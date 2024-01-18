@@ -294,7 +294,7 @@ def command(func, api_endpoint: str = None, **kwargs) -> Command:
 		description=desc,
 		callback=func,
 		nsfw=nsfw,
-		endpoint=api_endpoint
+		endpoint=api_endpoint,
 		**kwargs # Add any extras
 	)
 	return _command
