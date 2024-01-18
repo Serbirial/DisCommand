@@ -76,7 +76,8 @@ def _create_context(
 	)
 
 def _has_prefix(prefixes: list, message: Message) -> str:
-	for prefix in prefixes.sort(key=len, reverse=True):
+	prefixes.sort(key=len, reverse=True)
+	for prefix in prefixes:
 		if message.content.startswith(prefix):
 			return prefix
 
@@ -174,14 +175,15 @@ def process_message(bot: Client | AutoShardedClient, prefixes: str | list, messa
 		Command: The command found
 		Args (dict): All found args
 	"""
-	prefix = _has_prefix(prefixes, message)
-	if prefix:
-		command_data = _find_command(bot, prefix, message.content)
-		if command_data:
-			alias = command_data[1]
-			args = _find_args(command_data[0], message, alias)
-			context = _create_context(message, bot, args=args, kwargs={}, prefix=prefixes, command=command_data[0], invoked_with=prefix, cls=context)
-			return command_data[0], context
+	if prefixes:
+		prefix = _has_prefix(prefixes, message)
+		if prefix:
+			command_data = _find_command(bot, prefix, message.content)
+			if command_data:
+				alias = command_data[1]
+				args = _find_args(command_data[0], message, alias)
+				context = _create_context(message, bot, args=args, kwargs={}, prefix=prefixes, command=command_data[0], invoked_with=prefix, cls=context)
+				return command_data[0], context
 	return None, message.channel
 
 	
