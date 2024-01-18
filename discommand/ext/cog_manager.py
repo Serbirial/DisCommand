@@ -23,7 +23,7 @@ class CogManager:
 		self.all_commands: dict[str, Command | CommandGroup] = {}
 		self.sub_commands: dict[str, Command] = {}
 
-	def rebuild_data(self):
+	def rebuild_data(self, clear: bool = False):
 		del [
 			self._cogs,
 			self.help_dict,
@@ -42,6 +42,10 @@ class CogManager:
 		self.events:       dict[str, Event] = {}
 		self.all_commands: dict[str, Command | CommandGroup] = {}
 		self.sub_commands: dict[str, Command] = {}
+
+		if clear:
+			self.client.all_commands = self.all_commands
+			self.client.sub_commands = self.sub_commands
 
 	def build_help_dict(self, command: Command | CommandGroup) -> dict:
 			if type(command) == CommandGroup:
@@ -129,8 +133,7 @@ class CogManager:
 				self._cogs[exports["name"]] = exports["cog"]
 		if update_commands:
 			self.update_all_commands()
-			
-	
+
 	async def unload_cogs(self, autoreload: bool = False):
 		"""Unloads all loaded cogs, and optionally: automatically loads them back from file once they are unloaded.
 
