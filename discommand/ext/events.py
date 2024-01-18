@@ -77,8 +77,8 @@ def _create_context(
 
 def _has_prefix(prefixes: list, message: Message) -> str:
 	for prefix in prefixes:
-			if message.content[:len(prefix)] == prefix:
-				return prefix
+		if message.content.startswith(prefix):
+			return prefix
 
 def _look_for_alias(bot: Client | AutoShardedClient, command: str):
 	for _command in bot.all_commands.values():
