@@ -76,7 +76,7 @@ def _create_context(
 	)
 
 def _has_prefix(prefixes: list, message: Message) -> str:
-	for prefix in prefixes:
+	for prefix in prefixes.sort(key=len, reverse=True):
 		if message.content.startswith(prefix):
 			return prefix
 
