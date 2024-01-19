@@ -269,13 +269,13 @@ def command(func, api_endpoint: str = None, **kwargs) -> Command:
 	Returns:
 		Command: Command object with all needed data.
 	"""
+	if not inspect.iscoroutinefunction(func):
+		raise TypeError('command function must be a coroutine function')
+
 	aliases = kwargs.pop("aliases", [])
 	name = kwargs.pop("name", None)
 	description = kwargs.pop("description", None)
 	nsfw = kwargs.pop("nsfw", False)
-
-	if not inspect.iscoroutinefunction(func):
-		raise TypeError('command function must be a coroutine function')
 
 	if not name:
 		name = func.__name__
@@ -300,7 +300,7 @@ def command(func, api_endpoint: str = None, **kwargs) -> Command:
 	return _command
 
 @_command_decorator
-def group(func, api_endpoint: str = None, aliases: list = [], name: str = None, description: str = None, nsfw: bool =  False) -> Command:
+def group(func, api_endpoint: str = None, **kwargs) -> Command:
 	"""Decorator for turning a regular function into a Group Command.
 
 	Args:
@@ -314,6 +314,11 @@ def group(func, api_endpoint: str = None, aliases: list = [], name: str = None, 
 	"""
 	if not inspect.iscoroutinefunction(func):
 		raise TypeError('command function must be a coroutine function')
+
+	aliases = kwargs.pop("aliases", [])
+	name = kwargs.pop("name", None)
+	description = kwargs.pop("description", None)
+	nsfw = kwargs.pop("nsfw", False)
 
 	if not name:
 		name = func.__name__
@@ -332,7 +337,8 @@ def group(func, api_endpoint: str = None, aliases: list = [], name: str = None, 
 		description=desc,
 		callback=func,
 		nsfw=nsfw,
-		endpoint=api_endpoint
+		endpoint=api_endpoint,
+		**kwargs # Add any extras
 	)
 	return _command
 
