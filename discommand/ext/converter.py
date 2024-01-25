@@ -110,4 +110,8 @@ async def integer(to_convert: Any) -> int:
 	try:
 		return int(to_convert)
 	except:
+		try:
+			return int(to_convert.strip())
+		except:
+			raise ConverterError(f"Failed to convert `{to_convert}` into integer.")
 		raise ConverterError(f"Failed to convert `{to_convert}` into integer.")
