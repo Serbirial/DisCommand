@@ -179,7 +179,7 @@ class CommandGroup:
 			setattr(self, key, value)
 
 	@_group_command_decorator
-	def command(func, api_endpoint: str = None, **kwargs) -> Command:
+	def command(func, group, api_endpoint: str = None, **kwargs) -> Command:
 		"""Decorator for turning a regular function into a Command within a Group.
 
 		Args:
