@@ -1,10 +1,13 @@
-from .shard import Shard
+import asyncio
 
+from .shard import Shard
 
 class ThreadedCluster:
 	def __init__(self, name: str, id: int, client = None) -> None:
 		self.id = id
 		self.client = client
+		self.loop = asyncio.new_event_loop()
+		asyncio.set_event_loop(self.loop)
 
 		self.threads = {}
 
@@ -25,5 +28,5 @@ class ThreadedCluster:
 			shd.init_shard(shard_count)
 		for sid, shd in self.threads.items():
 			print(f"Shard {sid} logging in...")
-			shd.login(token)
+			self.loop.create_task(shd.login(token))
 		print("All shards ready.")

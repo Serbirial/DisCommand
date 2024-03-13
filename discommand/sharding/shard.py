@@ -12,9 +12,5 @@ class Shard:
 		self.client.shard_count = shard_count 
 		self.client.shard_ids = self.shard_range
 
-	def _actual_login(self, token):
-		self.client.run(token)
-
 	def login(self, token):
-		self.login_thread = Thread(target=self._actual_login, args=(token,))
-		self.login_thread.run()
+		self.client.run(token)
