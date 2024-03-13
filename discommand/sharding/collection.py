@@ -16,7 +16,7 @@ class ThreadedCluster:
 		if not self.client:
 			raise Exception("Cannot add thread shard without adding client first.")
 
-		shard = Shard(len(self.shards.keys())+1, ids, self.client)
+		shard = Shard(len(self.threads.keys())+1, ids, self.client)
 		self.threads[shard.id] = shard
 
 	def launch(self, token: str, shard_count: int):
