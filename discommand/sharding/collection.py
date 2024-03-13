@@ -1,4 +1,4 @@
-import asyncio
+import multiprocessing 
 
 from .shard import Shard
 
@@ -6,8 +6,8 @@ class ThreadedCluster:
 	def __init__(self, name: str, id: int, client = None) -> None:
 		self.id = id
 		self.client = client
-		self.loop = asyncio.new_event_loop()
-		asyncio.set_event_loop(self.loop)
+
+		self.processes = {}
 
 		self.threads = {}
 
@@ -18,15 +18,23 @@ class ThreadedCluster:
 	def add_thread(self, ids: list[int] | int):
 		if not self.client:
 			raise Exception("Cannot add thread shard without adding client first.")
-
+		print(ids)
 		shard = Shard(len(self.threads.keys())+1, ids, self.client)
 		self.threads[shard.id] = shard
 
-	def launch(self, token: str, shard_count: int):
-		print("Initializing shards...")
-		for shd in self.threads.values():
-			shd.init_shard(shard_count)
+	def launch(self, token: str, shard_count: int, *client_args):
+		print(self.threads)
+		print("Initializing and logging in shards...")
 		for sid, shd in self.threads.items():
-			print(f"Shard {sid} logging in...")
-			self.loop.create_task(shd.login(token))
-		print("All shards ready.")
+			print(f"Shard {sid} ({shd.shard_range}) initializing...")
+			shd.init_shard(shard_count, *client_args if client_args else ())
+			process = multiprocessing.Process(target=shd.login, args=(token, ))
+			self.processes[sid] = process
+
+		print("All Shards ready to start.\n\nStarting now...\n")
+
+		for proc in self.processes.values():
+			proc.start()
+
+		for _proc in self.processes.values():
+			_proc.join()
