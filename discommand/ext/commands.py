@@ -179,7 +179,7 @@ class CommandGroup:
 			setattr(self, key, value)
 
 	@_group_command_decorator
-	def command(func, group, api_endpoint: str = None, name: str = None, description: str = None, nsfw: bool =  False) -> Command:
+	def command(func, api_endpoint: str = None, **kwargs) -> Command:
 		"""Decorator for turning a regular function into a Command within a Group.
 
 		Args:
@@ -195,6 +195,11 @@ class CommandGroup:
 		if not inspect.iscoroutinefunction(func):
 			raise TypeError('command function must be a coroutine function')
 
+		aliases = kwargs.pop("aliases", [])
+		name = kwargs.pop("name", None)
+		description = kwargs.pop("description", None)
+		nsfw = kwargs.pop("nsfw", False)
+
 		if not name:
 			name = func.__name__
 
@@ -209,10 +214,12 @@ class CommandGroup:
 		_command = Command(
 			name=name if name else func.__name__,
 			description=desc,
+			aliases=aliases,
 			callback=func,
 			nsfw=nsfw,
 			endpoint=api_endpoint,
-			parent=group
+			parent=group,
+			**kwargs
 		)
 		group.add_command(_command)
 		return _command

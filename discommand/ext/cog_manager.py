@@ -81,7 +81,7 @@ class CogManager:
 					print(f"Adding command: {command.name}")
 					self.all_commands[command.name] = command
 					self.help_dict[0][_][command.name] = self.build_help_dict(command)
-				
+
 			for event in cog.events:
 				if event.event_name not in self.events:
 					self.events[event.event_name] = [event]
@@ -105,7 +105,7 @@ class CogManager:
 		resolved_name = importlib.util.resolve_name(f"{path.split('.py')[0].replace('/', '.')}", None)
 		spec = importlib.util.find_spec(resolved_name)
 		if not spec:
-			raise CogNotFoundFromSpec("Spec was None while attempting to load cog file.")
+			raise CogNotFoundFromSpec(f"Spec was None while attempting to load cog file ({resolved_name}).")
 		exports = await cogs._load_cog_from_spec(self.client, spec, None)
 		self._cogs[exports["name"]] = exports["cog"]
 		if update_commands:
@@ -127,7 +127,7 @@ class CogManager:
 				resolved_name = importlib.util.resolve_name(f"{path.replace('/', '.')}{file.split('.py')[0]}", None)
 				spec = importlib.util.find_spec(resolved_name)
 				if not spec:
-					raise CogNotFoundFromSpec("Spec was None while attempting to load cog file.")
+					raise CogNotFoundFromSpec(f"Spec was None while attempting to load cog file ({resolved_name}).")
 				exports = await cogs._load_cog_from_spec(self.client, spec, None)
 				
 				self._cogs[exports["name"]] = exports["cog"]

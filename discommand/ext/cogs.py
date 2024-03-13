@@ -30,7 +30,7 @@ class Cog(object):
         
         commands = {}
         events = []
-        # Get all methods that are of the Command type
+        # Get all methods that are of the Command / Event type
         command_list = [getattr(self, attribute) for attribute in dir(self) if type(getattr(self, attribute)) in [Command, CommandGroup]]
         for method in command_list:
             commands[method.name] = method
