@@ -69,16 +69,16 @@ class CogManager:
 						self.help_dict[1][_] = {}
 
 					self.all_commands[command.name] = command
-					print(f"Adding parent command: {command.name}")
+					#print(f"Adding parent command: {command.name}")
 					for _name, _command in command.commands.items():
-						print(f"Adding subcommand: {_command.name}")
+						#print(f"Adding subcommand: {_command.name}")
 						self.sub_commands[_command.name] = _command
 
 					self.help_dict[1][_][command.name] = self.build_help_dict(command)
 				elif type(command.parent) != CommandGroup:
 					if _ not in self.help_dict[0]:
 						self.help_dict[0][_] = {}
-					print(f"Adding command: {command.name}")
+					#print(f"Adding command: {command.name}")
 					self.all_commands[command.name] = command
 					self.help_dict[0][_][command.name] = self.build_help_dict(command)
 
