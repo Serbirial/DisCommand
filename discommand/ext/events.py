@@ -75,8 +75,9 @@ def _create_context(
 		invoked_subcommand=invoked_subcommand
 	)
 
-def _has_prefix(prefixes: list, message: Message) -> str:
-	prefixes.sort(key=len, reverse=True)
+def _has_prefix(prefixes: list, message: Message, sort: bool = False) -> str:
+	if sort:
+		prefixes.sort(key=len, reverse=True)
 	for prefix in prefixes:
 		if message.content.startswith(prefix):
 			return prefix
@@ -163,7 +164,7 @@ def _find_args(command: Command, message: Message, alias: str = None) -> dict[st
 		given_args[list(given_args.keys())[-1]] += _temp
 	return given_args
 	
-def process_message(bot: Client | AutoShardedClient, prefixes: str | list, message: Message, context = None) -> Command:
+def process_message(bot: Client | AutoShardedClient, prefixes: str | list, message: Message, context = None, sort_prefixes: bool = False) -> Command:
 	"""Processes a message, for retrieving a command if the message contains the prefix+command combination.
 
 	Args:
@@ -176,7 +177,7 @@ def process_message(bot: Client | AutoShardedClient, prefixes: str | list, messa
 		Args (dict): All found args
 	"""
 	if prefixes:
-		prefix = _has_prefix(prefixes, message)
+		prefix = _has_prefix(prefixes, message, sort_prefixes)
 		if prefix:
 			command_data = _find_command(bot, prefix, message.content)
 			if command_data:
