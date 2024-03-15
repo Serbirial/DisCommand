@@ -10,7 +10,8 @@ class Shard:
 
 
 	def init_shard(self, internal_name, shard_count, *client_args):
-		self.client = self.raw_client(internal_name=internal_name, *client_args if client_args else None)
+		self.client = self.raw_client(*client_args if client_args else None)
+		self.client.internal_name = internal_name
 		self.client.shard_ids = self.shard_range
 		self.client.shard_count = shard_count 
 
