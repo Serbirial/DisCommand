@@ -37,6 +37,17 @@ class ThreadedCluster:
 		shard = Shard(len(self.threads.keys())+1, ids, self.client)
 		self.threads[shard.id] = shard
 
+	async def run_bot_function_across_all_threads(self, function_name: str, *args):
+		if not hasattr(self.client, function_name):
+			raise Exception(f"Bot has no function {function_name}")
+
+		elif hasattr(self.client, function_name):
+			for thread in self.threads.values():
+				if not hasattr(thread, "client"):
+					raise Exception("Thread has not been initialized.")
+				thread.client._sub_instance_queue.put(("execute", (function_name, [*args])))
+
+
 	def launch(self, token: str, shard_count: int, *client_args):
 		"""Launches the cluster of bot instances.
 
@@ -47,7 +58,7 @@ class ThreadedCluster:
 		if not self.client:
 			raise Exception("Cannot add thread shard without adding client first.")
 		for sid, shd in self.threads.items():
-			shd.init_shard(shard_count, *client_args if client_args else ())
+			shd.init_shard(f"{self.name}_thread_{sid}", shard_count, *client_args if client_args else ())
 			process = multiprocessing.Process(target=shd.login, args=(token, ), daemon=True, name=f"cluster_{self.name}_shard_{sid}")
 			self.processes[sid] = process
 
