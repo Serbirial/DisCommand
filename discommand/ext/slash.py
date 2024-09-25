@@ -1,52 +1,55 @@
-import inspect
+# NOTE: Im gonna commit mass fucking warcrimes
 
 from discord import (
-	app_commands,
 	Client,
 	AutoShardedClient
 )
-from discord.app_commands import Command as SlashCommand
-
-from collections.abc import Callable
 from .commands import Command
-from functools import wraps
 
-from typing_extensions import (
-	Self,
-	Any
-)
+from typing_extensions import Self
 
-def _slash_decorator(decorator) -> Callable:
-	def layer1(*args, **kwargs):
-		@wraps(decorator)
-		def layer2(command):
-			return decorator(command, *args, **kwargs)
-		return layer2
-	return layer1
+SLASH_INTERACTION = 1
+USER_INTERACTION = 2
+MESSAGE_INTERACTION = 3
 
-class ConvertedSlashCommand:
-	def __init__(self, command: Command) -> None:
-		pass
-
+def command_to_json(command: Command):
+	json = {
+		"name": command.name,
+		"type": SLASH_INTERACTION,
+		"description": command.description,
+		"options": [
+			# TODO: actually get the commands arguments and list them here; or implement a way of defining them when calling `add_to_tree`
+		]
+	}
+	return json
 
 class SlashCommandTree:
 	def __init__(self, client: Client | AutoShardedClient) -> Self:
-		self.tree: app_commands.CommandTree = app_commands.CommandTree(client)
+		self.client = client
+		self.tree: {}
 
-		self.converted = {}
+	def register_command(self, command: Command) -> None:
+		"""Registers a command to the slash command tree.
 
-	@_slash_decorator
-	def make_slash_compatible(self, command: Command) -> ConvertedSlashCommand:
+		Args:
+			command (Command): The command to add to the tree.
+
+		Raises:
+			Exception: A command with the same name has already been registered to the tree. Or the command was not of the type `discommand.commands.Command`
+
+		Returns:
+			None
+		"""		
 		if not type(command) == Command:
 			return Exception("Can only make regular commands slash compatible.")
 
+		if command.name in self.tree:
+			raise Exception("Command already in Tree.")
 
-		_slash_command = SlashCommand(
-			callback=command.callback,
-			name=command.name,
-			description=command.description,
-			nsfw=command.nsfw,
-			extras={0: command},
-			parent=None
-		)
-		self.tree.add_command(command)
+		self.tree[command.name] = command_to_json(command)
+
+	def check_for_slash(self, command_name: str):
+		if command_name in self.tree:
+			return self.tree[command_name]
+		else:
+			return False	

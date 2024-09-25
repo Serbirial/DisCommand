@@ -2,7 +2,8 @@ import re
 
 from discord import (
 	utils,
-	Member
+	Member,
+	Role
 )
 from discord.abc import (
 	GuildChannel
@@ -63,6 +64,31 @@ async def channel(context, to_convert: Any) -> GuildChannel:
 		raise ConverterError(f"Failed to convert `{to_convert}` into channel.")
 	except:
 		raise ConverterError(f"Failed to convert `{to_convert}` into channel.")
+
+async def role(context, to_convert: Any) -> Role:
+	"""Converts to_convert to a role if possible
+
+	Args:
+		context (_type_): Context within this is invoked.
+		to_convert (Any): Argument to convert
+
+	Raises:
+		ConverterError: Failed to convert to_convert to a channel.
+
+	Returns:
+		role: The found role
+	"""    
+	if not to_convert:
+		raise ConverterError("Nothing to convert.") 
+	if (uid := re.search(_ID_REGEX, to_convert)): # Was mentioned or has UID
+		return context.guild.get_role(int(uid[0]))
+	try:
+		role = utils.get(context.guild.roles, name=to_convert)
+		if role:
+			return role
+		raise ConverterError(f"Failed to convert `{to_convert}` into role.")
+	except:
+		raise ConverterError(f"Failed to convert `{to_convert}` into role.")
 
 async def emoji(context, to_convert: Any):
 	if not to_convert:
